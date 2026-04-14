@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citation Formatter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f2eb;
+      --surface: #faf8f4;
+      --border: #d6d0c4;
+      --border-light: #e8e3d9;
+      --text: #1a1714;
+      --text-muted: #6b6560;
+      --text-faint: #9e9890;
+      --accent: #2c5f4a;
+      --accent-light: #e8f0ec;
+      --accent-mid: #3d7a61;
+      --danger: #8b2020;
+      --mono: 'DM Mono', monospace;
+      --serif: 'Lora', Georgia, serif;
+    }
+
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    header::before {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 0 auto 1.5rem;
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    textarea::placeholder { color: var(--text-faint); font-style: italic; }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 0 0.9rem;
+      height: 38px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6560'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    button#format-btn {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      padding: 0 1.4rem;
+      height: 38px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    button#format-btn:hover { background: var(--accent-mid); }
+    button#format-btn:disabled { opacity: 0.55; cursor: default; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 1.75rem 0;
+    }
+
+    .result-area { display: none; }
+    .result-area.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.75rem;
+    }
+
+    .style-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+
+    button#copy-btn {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    button#copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .result-citation {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 3px 3px 0;
+      padding: 0.9rem 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .notes {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding-left: 0.75rem;
+      border-left: 1px solid var(--border);
+    }
+
+    .notes::before {
+      content: 'Note: ';
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-style: normal;
+      color: var(--text-faint);
+    }
+
+    .error-msg {
+      display: none;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--danger);
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      background: #fcf0f0;
+      border: 1px solid #e8c0c0;
+      border-radius: 3px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      color: var(--text-faint);
+    }
+
+    .key-section {
+      margin-bottom: 1.5rem;
+      border: 1px dashed var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .key-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0.9rem;
+      background: #f0ede6;
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    .key-toggle:hover { background: #ece9e1; }
+
+    .key-toggle .arrow {
+      font-size: 0.65rem;
+      transition: transform 0.2s;
+      color: var(--text-faint);
+    }
+
+    .key-toggle.open .arrow { transform: rotate(180deg); }
+
+    .key-body {
+      display: none;
+      padding: 0.9rem;
+      background: #f7f5f0;
+      border-top: 1px dashed var(--border);
+    }
+
+    .key-body.open { display: block; }
+
+    .key-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+
+    .key-input {
+      flex: 1;
+      height: 34px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 0 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      outline: none;
+      letter-spacing: 0.05em;
+    }
+
+    .key-input:focus { border-color: var(--accent); }
+
+    .key-save-btn {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      height: 34px;
+      padding: 0 0.9rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .key-save-btn:hover { background: var(--accent-mid); }
+
+    .key-status {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      margin-top: 0.5rem;
+      min-height: 1rem;
+    }
+
+    .key-status.ok { color: var(--accent); }
+    .key-status.err { color: var(--danger); }
+
+    .key-hint {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      line-height: 1.6;
+    }
+
+    .key-hint a { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Citation <em>Formatter</em></h1>
+    <p class="subtitle">Paste any messy citation — get it back clean.</p>
+  </header>
+
+  <div class="card">
+
+    <div class="key-section">
+      <button class="key-toggle" id="key-toggle" onclick="toggleKey()">
+        <span id="key-toggle-label">&#128273; API key — click to set</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="key-body" id="key-body">
+        <p class="key-hint">Your key is stored only in your browser's localStorage — never sent anywhere except Anthropic's API. Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.</p>
+        <div class="key-row">
+          <input class="key-input" type="password" id="key-input" placeholder="sk-ant-..." autocomplete="off" />
+          <button class="key-save-btn" onclick="saveKey()">Save</button>
+        </div>
+        <p class="key-status" id="key-status"></p>
+      </div>
+    </div>
+
+    <label class="field-label" for="citation-input">Citation to format</label>
+    <textarea
+      id="citation-input"
+      placeholder="e.g.  smith j 2019 attachment theory new york basic books&#10;or a DOI, a half-remembered reference, a messy export..."
+    ></textarea>
+
+    <div class="controls">
+      <select id="style-select">
+        <option value="APA 7th edition">APA 7th</option>
+        <option value="MLA 9th edition">MLA 9th</option>
+        <option value="Chicago 17th edition">Chicago 17th</option>
+        <option value="Harvard">Harvard</option>
+        <option value="Vancouver">Vancouver</option>
+      </select>
+      <button id="format-btn" onclick="formatCitation()">Format citation</button>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="result-area" id="result-area">
+      <hr class="divider" />
+      <div class="result-header">
+        <span class="style-badge" id="style-badge">APA 7th</span>
+        <button id="copy-btn" onclick="copyCitation()">Copy</button>
+      </div>
+      <div class="result-citation" id="result-citation"></div>
+      <p class="notes" id="result-notes" style="display:none;"></p>
+    </div>
+
+  </div>
+
+  <footer>powered by Claude · anthropic</footer>
+
+  <script>
+    function getKey() { return localStorage.getItem('cf_api_key') || ''; }
+
+    function toggleKey() {
+      const body = document.getElementById('key-body');
+      const toggle = document.getElementById('key-toggle');
+      const isOpen = body.classList.toggle('open');
+      toggle.classList.toggle('open', isOpen);
+      if (isOpen) {
+        const saved = getKey();
+        if (saved) document.getElementById('key-input').value = saved;
+      }
+    }
+
+    function saveKey() {
+      const val = document.getElementById('key-input').value.trim();
+      const status = document.getElementById('key-status');
+      const label = document.getElementById('key-toggle-label');
+      if (!val.startsWith('sk-')) {
+        status.textContent = 'That doesn\'t look like a valid key (should start with sk-).';
+        status.className = 'key-status err';
+        return;
+      }
+      localStorage.setItem('cf_api_key', val);
+      status.textContent = 'Key saved.';
+      status.className = 'key-status ok';
+      label.textContent = '\uD83D\uDD13 API key — set \u2713';
+      setTimeout(() => {
+        document.getElementById('key-body').classList.remove('open');
+        document.getElementById('key-toggle').classList.remove('open');
+      }, 800);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (getKey()) {
+        document.getElementById('key-toggle-label').textContent = '\uD83D\uDD13 API key — set \u2713';
+      }
+    });
+
+    async function formatCitation() {
+      const apiKey = getKey();
+      const input = document.getElementById('citation-input').value.trim();
+      const style = document.getElementById('style-select').value;
+      const btn = document.getElementById('format-btn');
+      const errorEl = document.getElementById('error-msg');
+      const resultArea = document.getElementById('result-area');
+
+      errorEl.style.display = 'none';
+      resultArea.classList.remove('visible');
+
+      if (!apiKey) {
+        errorEl.textContent = 'Please set your Anthropic API key first (click the key section above).';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (!input) {
+        errorEl.textContent = 'Please paste a citation to format.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Formatting\u2026';
+
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            system: `You are a citation formatting expert. Given a messy, incomplete, or incorrectly formatted citation, return a corrected version in the requested style. Respond ONLY with a JSON object — no markdown, no backticks, no preamble. Format: {"formatted": "the clean citation here", "notes": "brief notes about assumptions made or missing info, or empty string if none"}`,
+            messages: [
+              { role: 'user', content: `Format this citation in ${style} style:\n\n${input}` }
+            ]
+          })
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+        const text = data.content.map(i => i.text || '').join('');
+        const clean = text.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(clean);
+
+        document.getElementById('style-badge').textContent = style;
+        document.getElementById('result-citation').textContent = parsed.formatted;
+
+        const notesEl = document.getElementById('result-notes');
+        if (parsed.notes) { notesEl.textContent = parsed.notes; notesEl.style.display = 'block'; }
+        else { notesEl.style.display = 'none'; }
+
+        resultArea.classList.add('visible');
+
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = 'Something went wrong. Check your API key and try again.';
+        errorEl.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Format citation';
+    }
+
+    function copyCitation() {
+      const text = document.getElementById('result-citation').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+      });
+    }
+  </script>
+</body>
+</html>
