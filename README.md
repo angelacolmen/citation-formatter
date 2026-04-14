@@ -12,7 +12,7 @@ An AI-powered citation formatter built with Claude. Paste any messy, incomplete,
 
 ## Demo
 
-🤗 [Live on HuggingFace Spaces](https://huggingface.co/spaces/angelacolmen/citation-formatter) 
+🤗 [Live on HuggingFace Spaces](https://huggingface.co/spaces/AngelaColmen/citation-formatter)
 
 ## How to Use
 
@@ -34,3 +34,30 @@ smith j 2019 attachment theory new york basic books
 ```
 Harari, Y, Sapiens, a brief history, vintage, 2014
 ```
+```
+https://doi.org/10.1038/s41586-021-03819-2
+```
+
+## Tech Stack
+
+- Vanilla HTML, CSS, JavaScript — no frameworks, no build step
+- [Claude](https://anthropic.com) (claude-sonnet-4) via the Anthropic API
+
+## Setup for Local Development
+
+No installation needed. Just open `index.html` in any modern browser.
+
+To run via a local server (optional):
+
+```bash
+npx serve .
+```
+
+## Related Projects
+
+- [Semantic Library Search](https://github.com/angelacolmen/semantic-library-search)
+- [Subject Heading Generator](https://github.com/angelacolmen/subject-heading-generator)
+
+## License
+
+MIT
