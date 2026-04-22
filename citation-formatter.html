@@ -544,7 +544,7 @@
             'anthropic-dangerous-direct-browser-access': 'true'
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
+           model: 'claude-haiku-4-5-20251001',
             max_tokens: 1000,
             system: `You are a citation formatting expert. Given a messy, incomplete, or incorrectly formatted citation, return a corrected version in the requested style. Respond ONLY with a JSON object — no markdown, no backticks, no preamble. Format: {"formatted": "the clean citation here", "notes": "brief notes about assumptions made or missing info, or empty string if none"}`,
             messages: [
